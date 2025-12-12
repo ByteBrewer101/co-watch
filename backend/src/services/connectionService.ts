@@ -10,6 +10,8 @@ export function HandleConnection(Socket:any){
     })
 
 
+
+    //send to all
     Socket.on('roomMessage',(msg:roomMessage)=>{
         io.to(msg.roomId).emit('roomMessage',msg.message)
     })

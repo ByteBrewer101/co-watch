@@ -7,6 +7,7 @@ function HandleConnection(Socket) {
         console.log(Socket.id, "is joining", msg.roomName, "with id ", msg.roomId);
         Socket.join(msg.roomId);
     });
+    //send to all
     Socket.on('roomMessage', (msg) => {
         __1.io.to(msg.roomId).emit('roomMessage', msg.message);
     });
