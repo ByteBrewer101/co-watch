@@ -11,7 +11,14 @@ const connectionService_1 = require("./services/connectionService");
 const PORT = 5000;
 const app = (0, express_1.default)();
 const server = (0, node_http_1.createServer)(app);
-exports.io = new socket_io_1.Server(server);
+exports.io = new socket_io_1.Server(server, {
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"], // or ["*"]
+        allowedHeaders: ["*"],
+        credentials: true,
+    },
+});
 app.get('/', (req, res) => {
     console.log("httmp1");
 });

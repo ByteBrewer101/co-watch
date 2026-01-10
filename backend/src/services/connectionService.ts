@@ -1,8 +1,9 @@
+import { Socket } from "socket.io";
 import { io } from "..";
 import { joinMessage, roomMessage } from "../types/messageTypes"
 
 export function HandleConnection(Socket:any){
-
+console.log(Socket.id,"is connected");
     Socket.on('joinRoom',(msg:joinMessage)=>{
         if(!msg.roomId){
             console.log("Unable to join, roomId missing");
@@ -15,6 +16,12 @@ export function HandleConnection(Socket:any){
 
     })
 
+    //create Room
+    
+    
+
+
+
     //send to all
     Socket.on('roomMessage',(msg:roomMessage)=>{
         io.to(msg.roomId).emit('roomMessage',msg.message)
@@ -22,3 +29,6 @@ export function HandleConnection(Socket:any){
 
 
 }
+
+
+
