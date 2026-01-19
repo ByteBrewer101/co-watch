@@ -16,6 +16,26 @@ export function sendMessageOnEvent(message,socket,eventName){
 
 
 
+
+
+
+
+export function sendMessageToRoom(msg, roomId){
+
+
+}
+
+
+
+export function HandleChat(msg , roomId){
+
+    //send msg to roomid 
+
+}
+
+
+
+
 //1 joinroom
 //2 disconnect from room 
 //3 pause 

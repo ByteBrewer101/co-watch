@@ -13,8 +13,8 @@ export function activateUser(id, userName, roomName) {
   
 
   UserManager.setUsers([
-    UserManager.users.filter((usr) => usr.id != id),
-    ...currUser,
+    ...UserManager.users.filter((usr) => usr.id != id),
+    currUser,
   ]);
   return currUser;
 }
