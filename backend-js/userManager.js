@@ -7,8 +7,8 @@ const UserManager={
 
 
 
-export function activateUser(id, userName, roomName) {
-  const currUser = { id, userName, roomName };
+export function activateUser(id, userName, roomId) {
+  const currUser = { id, userName, roomId };
 
   
 
@@ -20,13 +20,13 @@ export function activateUser(id, userName, roomName) {
 }
 
 export function deactivateUser(id) {
-  UserManager.setUsers(UsersState.users.filter((usr) => usr.id !== id));
+  UserManager.setUsers(UserManager.users.filter((usr) => usr.id !== id));
 }
 
-export function getUser(id) {
+export function getUserInfo(id) {
   return UserManager.users.find((usr) => usr.id == id);
 }
 
-export function getUsersInRoom(roomName) {
-  return UserManager.users.filter((usr) => usr.roomName === roomName);
+export function getUsersInRoom(roomId) {
+  return UserManager.users.filter((usr) => usr.roomId === roomId);
 }

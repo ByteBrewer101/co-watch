@@ -1,7 +1,7 @@
 const express = require("express");
 const { Server } = require("socket.io");
 const { sendMessage, sendMessageOnEvent } = require("./messageHandler");
-const { activateUser } = require("./userManager");
+const { activateUser, getUserInfo } = require("./userManager");
 
 const PORT = 5000
 const app = express()
@@ -25,8 +25,18 @@ function ioHandler(socket){
         handleJoinRoom(userDetails,socket)
     })
     
-    socket.on("sendChat",(msg)=>{
-        handleChat(msg,io)
+    socket.on("sendChat",(chatDetails)=>{
+        handleChat(chatDetails,io)
+    })
+    socket.on("sendCtrl", (ctrlDetails)=>{
+        const currUser = getUserInfo(socket.id)   
+        console.log(currUser);
+        const currRoom = currUser.roomId
+        const currCtrlDetails = {
+            ...ctrlDetails,
+            roomId: currRoom
+        }
+        handleControl(currCtrlDetails,io)
     })
 
 
@@ -39,7 +49,7 @@ function handleJoinRoom(userDetails,socket){
     }
     if(userDetails.roomId){
 
-        activateUser(currUser)
+        activateUser(currUser.id, currUser.userName, currUser.roomId);
         socket.join(currUser.roomId)
         sendMessageOnEvent("Joined Successfully",socket,"system")
     }else{
@@ -52,8 +62,10 @@ function handleJoinRoom(userDetails,socket){
 }
 
 
-
-
 function handleChat(msgDetails,io){
     io.to(msgDetails.roomId).emit("message",msgDetails.msg)
+}
+
+function handleControl(ctrlDetails, io){
+    io.to(ctrlDetails.roomId).emit("ctrlMessage", ctrlDetails.ctrlType)
 }
