@@ -1,60 +1,72 @@
 const express = require("express");
 const { Server } = require("socket.io");
 const { sendMessage, sendMessageOnEvent } = require("./messageHandler");
-const { activateUser, getUserInfo } = require("./userManager");
+const { activateUser, getUserInfo, deactivateUser } = require("./userManager");
 
 const PORT = 5000
 const app = express()
 
-const currServer = app.listen(PORT,()=>{
+const currServer = app.listen(PORT, () => {
     console.log("connected to ", PORT);
 })
 
 
-const io = new Server(currServer)
+const io = new Server(currServer, {
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"]
+    }
+})
 
 
-io.on("connection",(socket)=>{
+io.on("connection", (socket) => {
+
+    console.log(socket.id);
     ioHandler(socket)
 })
 
 
-function ioHandler(socket){
+function ioHandler(socket) {
 
-    socket.on("joinRoom",(userDetails)=>{
-        handleJoinRoom(userDetails,socket)
+    socket.on("joinRoom", (userDetails) => {
+        handleJoinRoom(userDetails, socket)
     })
-    
-    socket.on("sendChat",(chatDetails)=>{
-        handleChat(chatDetails,io)
+
+    socket.on("sendChat", (chatDetails) => {
+        handleChat(chatDetails, io)
     })
-    socket.on("sendCtrl", (ctrlDetails)=>{
-        const currUser = getUserInfo(socket.id)   
+    socket.on("sendCtrl", (ctrlDetails) => {
+        const currUser = getUserInfo(socket.id)
         console.log(currUser);
         const currRoom = currUser.roomId
         const currCtrlDetails = {
             ...ctrlDetails,
             roomId: currRoom
         }
-        handleControl(currCtrlDetails,io)
+        handleControl(currCtrlDetails, io)
     })
 
+    socket.on("disconnect",()=>{
+
+        deactivateUser(socket.id)
+        console.log(socket.id,"disconnected");
+    })
 
 }
 
-function handleJoinRoom(userDetails,socket){
+function handleJoinRoom(userDetails, socket) {
     const currUser = {
         ...userDetails,
-        id : socket.id
+        id: socket.id
     }
-    if(userDetails.roomId){
+    if (userDetails.roomId) {
 
         activateUser(currUser.id, currUser.userName, currUser.roomId);
         socket.join(currUser.roomId)
-        sendMessageOnEvent("Joined Successfully",socket,"system")
-    }else{
+        sendMessageOnEvent("Joined Successfully", socket, "system")
+    } else {
         //reject
-        sendMessageOnEvent("Invalid Payload",socket,"system")
+        sendMessageOnEvent("Invalid Payload", socket, "system")
         //dissconnect socket
         socket.disconnect(true);
     }
@@ -62,10 +74,10 @@ function handleJoinRoom(userDetails,socket){
 }
 
 
-function handleChat(msgDetails,io){
-    io.to(msgDetails.roomId).emit("message",msgDetails.msg)
+function handleChat(msgDetails, io) {
+    io.to(msgDetails.roomId).emit("message", msgDetails.msg)
 }
 
-function handleControl(ctrlDetails, io){
-    io.to(ctrlDetails.roomId).emit("ctrlMessage", ctrlDetails.ctrlType)
+function handleControl(ctrlDetails, io) {
+    io.to(ctrlDetails.roomId).emit("ctrlMessage", ctrlDetails)
 }

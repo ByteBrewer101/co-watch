@@ -1,16 +1,16 @@
-const UserManager={
-    users : [],
-    setUsers : function(newUsers){
-        this.users = newUsers
-    },
+const UserManager = {
+  users: [],
+  setUsers: function (newUsers) {
+    this.users = newUsers
+  },
 }
 
 
 
-export function activateUser(id, userName, roomId) {
+function activateUser(id, userName, roomId) {
   const currUser = { id, userName, roomId };
 
-  
+
 
   UserManager.setUsers([
     ...UserManager.users.filter((usr) => usr.id != id),
@@ -19,14 +19,22 @@ export function activateUser(id, userName, roomId) {
   return currUser;
 }
 
-export function deactivateUser(id) {
+function deactivateUser(id) {
   UserManager.setUsers(UserManager.users.filter((usr) => usr.id !== id));
 }
 
-export function getUserInfo(id) {
+function getUserInfo(id) {
   return UserManager.users.find((usr) => usr.id == id);
 }
 
-export function getUsersInRoom(roomId) {
+function getUsersInRoom(roomId) {
   return UserManager.users.filter((usr) => usr.roomId === roomId);
 }
+
+
+module.exports = {
+  activateUser,
+  deactivateUser,
+  getUserInfo,
+  getUsersInRoom,
+};

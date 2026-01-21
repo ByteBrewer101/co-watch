@@ -1,24 +1,48 @@
 import type React from "react";
 import { GlobalContext } from "./Contexts";
-import { useRef } from "react";
+import { useState, useEffect } from "react";
+import { SocketManager } from "@/sockets/socketManager";
+import { toast } from "sonner";
 
-interface ChildrenTypes{
-    children:React.ReactNode
+// ---------------- Types ----------------
+interface ChatMessage {
+  userName: string;
+  msg: string;
 }
 
+interface SystemMessage {
+  msg: string;
+}
 
-export function GlobalProvider({children}:ChildrenTypes){
+interface ChildrenTypes {
+  children: React.ReactNode;
+}
 
+export function GlobalProvider({ children }: ChildrenTypes) {
+  const [msgs, setMsgs] = useState<ChatMessage[]>([]);
 
-   
-    const currSocket = useRef(null);
+  useEffect(() => {
+    const socketManager = SocketManager.getSocketInstance();
+    socketManager.connect();
+    const socket = socketManager.getSocket();
 
+    socket.on("system", (msg: SystemMessage) => {
+      toast.success(msg.msg);
+    });
 
+    socket.on("message", (msg: ChatMessage) => {
+      toast.success(msg.msg);
+      setMsgs((prev) => [...prev, msg]);
+    });
 
-    
+    return () => {
+      socketManager.disconnect();
+    };
+  }, []);
 
-    return <GlobalContext.Provider value={currSocket} >
-        {children}
+  return (
+    <GlobalContext.Provider value={{ msgs, setMsgs }}>
+      {children}
     </GlobalContext.Provider>
-
+  );
 }

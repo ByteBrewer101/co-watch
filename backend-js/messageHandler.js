@@ -1,17 +1,17 @@
 
-function createMessage(message){
+function createMessage(message) {
 
     const currMessage = {
-        msg : message,
-        sent : new Date()
+        msg: message,
+        sent: new Date()
     }
-return currMessage
+    return currMessage
 }
 
 
-export function sendMessageOnEvent(message,socket,eventName){
+function sendMessageOnEvent(message, socket, eventName) {
     const currMessage = createMessage(message);
-    socket.emit(`${eventName}`,currMessage);
+    socket.emit(`${eventName}`, currMessage);
 }
 
 
@@ -20,14 +20,14 @@ export function sendMessageOnEvent(message,socket,eventName){
 
 
 
-export function sendMessageToRoom(msg, roomId){
+function sendMessageToRoom(msg, roomId) {
 
 
 }
 
 
 
-export function HandleChat(msg , roomId){
+function HandleChat(msg, roomId) {
 
     //send msg to roomid 
 
@@ -37,14 +37,18 @@ export function HandleChat(msg , roomId){
 
 
 //1 joinroom
-//2 disconnect from room 
-//3 pause 
+//2 disconnect from room
+//3 pause
 //4 play
 //5 chat
 
 
 
-//alag -> timestamp 
+//alag -> timestamp
 // 5 sync 
 
-
+module.exports = {
+    sendMessageOnEvent,
+    sendMessageToRoom,
+    HandleChat
+};
