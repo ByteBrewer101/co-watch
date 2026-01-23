@@ -13,6 +13,7 @@ import { GlobalContext } from "@/ContextApi/Contexts";
 interface ChatMessage {
   userName: string;
   msg: string;
+  timestamp: string;
 }
 
 // ---------------- Video Component ----------------
@@ -30,11 +31,23 @@ export function VideoPlayer() {
 
 // ---------------- Chat Sheet Component ----------------
 export function ChatSheet() {
-  const { msgs } = useContext(GlobalContext) as { msgs: ChatMessage[] }; // typed context
+  const { msgs, sendMessage } = useContext(GlobalContext) as {
+    msgs: ChatMessage[];
+    sendMessage: (msg: ChatMessage) => void;
+  };
   const [input, setInput] = useState<string>("");
 
-  // Optional: send message function
-  // const sendMessage = () => { ... }
+  const handleSend = () => {
+    if (!input.trim()) return;
+
+    sendMessage({
+      userName: "You",
+      msg: input,
+      timestamp: new Date().toISOString(),
+    });
+
+    setInput("");
+  };
 
   return (
     <Sheet>
@@ -67,6 +80,12 @@ export function ChatSheet() {
                   <p className="text-xs font-semibold">{m.userName}</p>
                 )}
                 <p>{m.msg}</p>
+                <p className="text-xs opacity-70">
+                  {new Date(m.timestamp).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </p>
               </div>
             ))}
           </div>
@@ -82,7 +101,7 @@ export function ChatSheet() {
               }
               className="flex-1 border rounded-md px-3 py-2"
             />
-            <Button /*onClick={sendMessage}*/>Send</Button>
+            <Button onClick={handleSend}>Send</Button>
           </div>
         </div>
       </SheetContent>

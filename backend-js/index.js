@@ -33,11 +33,18 @@ function ioHandler(socket) {
     })
 
     socket.on("sendChat", (chatDetails) => {
-        handleChat(chatDetails, io)
+       const currUser = getUserInfo(socket.id);
+       const currRoom = currUser.roomId;
+       console.log(currUser);
+       const currChatDetails = {
+         ...chatDetails,
+         roomId: currRoom,
+         userName: currUser.userName
+       };
+        handleChat(currChatDetails, io)
     })
     socket.on("sendCtrl", (ctrlDetails) => {
         const currUser = getUserInfo(socket.id)
-        console.log(currUser);
         const currRoom = currUser.roomId
         const currCtrlDetails = {
             ...ctrlDetails,
@@ -75,7 +82,7 @@ function handleJoinRoom(userDetails, socket) {
 
 
 function handleChat(msgDetails, io) {
-    io.to(msgDetails.roomId).emit("message", msgDetails.msg)
+    io.to(msgDetails.roomId).emit("message", msgDetails)
 }
 
 function handleControl(ctrlDetails, io) {
