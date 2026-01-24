@@ -41,7 +41,7 @@ function ioHandler(socket) {
          roomId: currRoom,
          userName: currUser.userName
        };
-        handleChat(currChatDetails, io)
+        handleChat(currChatDetails, socket)
     })
     socket.on("sendCtrl", (ctrlDetails) => {
         const currUser = getUserInfo(socket.id)
@@ -81,8 +81,8 @@ function handleJoinRoom(userDetails, socket) {
 }
 
 
-function handleChat(msgDetails, io) {
-    io.to(msgDetails.roomId).emit("message", msgDetails)
+function handleChat(msgDetails, socket) {
+    socket.to(msgDetails.roomId).emit("message", msgDetails)
 }
 
 function handleControl(ctrlDetails, io) {
