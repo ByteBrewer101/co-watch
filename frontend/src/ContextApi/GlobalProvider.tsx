@@ -47,6 +47,7 @@ export function GlobalProvider({ children }: ChildrenTypes) {
 
   const sendMessage = (msg: ChatMessage) => {
     if (!socketRef.current) return;
+    console.log("curr message",msg);
     setMsgs((prev) => [...prev, msg]);
     socketRef.current.emit("sendChat", msg);
   };
