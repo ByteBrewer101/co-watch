@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/sheet";
 import { GlobalContext } from "@/ContextApi/Contexts";
 
+
 // ---------------- Types ----------------
 interface ChatMessage {
   userName: string;
@@ -18,9 +19,12 @@ interface ChatMessage {
 
 // ---------------- Video Component ----------------
 export function VideoPlayer() {
+  //@ts-expect-error
+  const{ videoRef } = useContext(GlobalContext) 
+
   return (
     <div className="w-full h-full flex items-center justify-center bg-black rounded-xl">
-      <video
+      <video ref={videoRef}
         className="w-full h-full rounded-xl"
         controls
         src="https://www.w3schools.com/html/mov_bbb.mp4"

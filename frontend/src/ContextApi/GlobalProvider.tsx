@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { SocketManager } from "@/sockets/socketManager";
 import { toast } from "sonner";
 import type { Socket } from "socket.io-client";
+import { videoPause, videoPlay } from "@/videoController/videoctrl";
 
 interface ChatMessage {
   userName: string;
@@ -15,6 +16,10 @@ interface SystemMessage {
   msg: string;
 }
 
+interface ControlMessage {
+  type: string;
+}
+
 interface ChildrenTypes {
   children: React.ReactNode;
 }
@@ -22,7 +27,8 @@ interface ChildrenTypes {
 export function GlobalProvider({ children }: ChildrenTypes) {
   const [msgs, setMsgs] = useState<ChatMessage[]>([]);
   const socketRef = useRef<Socket | null>(null);
-  
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
 
   useEffect(() => {
     const socketManager = SocketManager.getSocketInstance();
@@ -42,6 +48,20 @@ export function GlobalProvider({ children }: ChildrenTypes) {
       
     });
 
+    socket.on("ctrlMessage", (msg: ControlMessage)=>{
+      const currType = msg.type
+
+      if(currType=="play"){
+        videoPlay(videoRef )
+      }
+      else if(currType=="pause"){
+        videoPause(videoRef)
+      }else{
+        console.log("Invalid type of ctrl");
+      }
+
+    })
+
     return () => {
       socket.disconnect();
     };
@@ -55,7 +75,7 @@ export function GlobalProvider({ children }: ChildrenTypes) {
   };
 
   return (
-    <GlobalContext.Provider value={{ msgs, sendMessage }}>
+    <GlobalContext.Provider value={{ msgs, sendMessage, videoRef }}>
       {children}
     </GlobalContext.Provider>
   );
