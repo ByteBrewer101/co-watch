@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { useContext, useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -36,6 +36,15 @@ export function ChatSheet() {
     sendMessage: (msg: ChatMessage) => void;
   };
   const [input, setInput] = useState<string>("");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [msgs]);
 
   const handleSend = () => {
     if (!input.trim()) return;
@@ -49,6 +58,21 @@ export function ChatSheet() {
     setInput("");
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
+  const formatTime = (timestamp: string) => {
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -57,41 +81,63 @@ export function ChatSheet() {
 
       <SheetContent side="right" className="w-[400px] px-4 py-2 sm:w-[450px]">
         <SheetHeader>
-          <SheetTitle>Chat</SheetTitle>
+          <SheetTitle className="text-lg font-semibold">Chat</SheetTitle>
         </SheetHeader>
 
         <div className="flex flex-col h-full mt-4">
           {/* Chat messages area */}
-          <div className="flex-1 overflow-y-auto space-y-3 p-2 border rounded-lg">
+          <div className="flex-1 overflow-y-auto space-y-4 p-3 border rounded-lg">
             {msgs.length === 0 && (
-              <div className="text-sm text-gray-500">No messages yet</div>
+              <div className="text-center text-gray-500 py-8">
+                <p className="text-sm">No messages yet</p>
+                <p className="text-xs mt-1">Start the conversation!</p>
+              </div>
             )}
 
-            {msgs.map((m: ChatMessage, idx: number) => (
-              <div
-                key={idx}
-                className={`max-w-[75%] p-2 rounded-md ${
-                  m.userName === "You"
-                    ? "bg-primary text-primary-foreground ml-auto"
-                    : "bg-muted"
-                }`}
-              >
-                {m.userName !== "You" && (
-                  <p className="text-xs font-semibold">{m.userName}</p>
-                )}
-                <p>{m.msg}</p>
-                <p className="text-xs opacity-70">
-                  {new Date(m.timestamp).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </p>
-              </div>
-            ))}
+            {msgs.map((m: ChatMessage, idx: number) => {
+              const isYou = m.userName === "You";
+              return (
+                <div
+                  key={idx}
+                  className={`flex flex-col ${
+                    isYou ? "items-end" : "items-start"
+                  }`}
+                >
+                  {/* Message bubble */}
+                  <div
+                    className={`relative max-w-[85%] rounded-xl p-1 ${
+                      isYou
+                        ? "bg-gray-900 text-white rounded-br-sm"
+                        : "bg-gray-100 text-gray-900 rounded-bl-sm"
+                    }`}
+                  >
+                    {/* Username - only for other users */}
+                    {!isYou && (
+                      <p className="text-sm font-bold text-gray-800">
+                        {m.userName}
+                      </p>
+                    )}
+                    
+                    {/* Message text */}
+                    <p className="text-sm break-words pr-16">{m.msg}</p>
+
+                    {/* Timestamp - positioned at bottom right with spacing */}
+                    <div
+                      className={`absolute bottom-1 right-0.5 text-xs flex items-center gap-1 ${
+                        isYou ? "text-gray-300" : "text-gray-500"
+                      }`}
+                    >
+                      {formatTime(m.timestamp)}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+            <div ref={messagesEndRef} />
           </div>
 
           {/* Input area */}
-          <div className="mt-3 flex gap-2">
+          <div className="mt-4 flex gap-2">
             <input
               type="text"
               placeholder="Type a message..."
@@ -99,9 +145,17 @@ export function ChatSheet() {
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                 setInput(e.target.value)
               }
-              className="flex-1 border rounded-md px-3 py-2"
+              onKeyDown={handleKeyDown}
+              className="flex-1 border rounded-md px-4 py-2.5 focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+              autoComplete="off"
             />
-            <Button onClick={handleSend}>Send</Button>
+            <Button 
+              onClick={handleSend} 
+              disabled={!input.trim()}
+              className="rounded-md"
+            >
+              Send
+            </Button>
           </div>
         </div>
       </SheetContent>
