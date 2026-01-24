@@ -29,14 +29,12 @@ export function GlobalProvider({ children }: ChildrenTypes) {
   const socketRef = useRef<Socket | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
-
   useEffect(() => {
     const socketManager = SocketManager.getSocketInstance();
     socketManager.connect();
 
     const socket = socketManager.getSocket();
     socketRef.current = socket;
-
 
     socket.on("system", (msg: SystemMessage) => {
       toast.success(msg.msg);
@@ -45,22 +43,19 @@ export function GlobalProvider({ children }: ChildrenTypes) {
     socket.on("message", (msg: ChatMessage) => {
       console.log(msg);
       setMsgs((prev) => [...prev, msg]);
-      
     });
 
-    socket.on("ctrlMessage", (msg: ControlMessage)=>{
-      const currType = msg.type
+    socket.on("ctrlMessage", (msg: ControlMessage) => {
+      const currType = msg.type;
 
-      if(currType=="play"){
-        videoPlay(videoRef )
-      }
-      else if(currType=="pause"){
-        videoPause(videoRef)
-      }else{
+      if (currType === "play") {
+        videoPlay(videoRef);
+      } else if (currType === "pause") {
+        videoPause(videoRef);
+      } else {
         console.log("Invalid type of ctrl");
       }
-
-    })
+    });
 
     return () => {
       socket.disconnect();
@@ -69,7 +64,7 @@ export function GlobalProvider({ children }: ChildrenTypes) {
 
   const sendMessage = (msg: ChatMessage) => {
     if (!socketRef.current) return;
-    console.log("curr message",msg);
+    console.log("curr message", msg);
     setMsgs((prev) => [...prev, msg]);
     socketRef.current.emit("sendChat", msg);
   };
