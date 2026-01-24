@@ -25,21 +25,16 @@ export function UserRegisterForm() {
 
     const socket = SocketManager.getSocketInstance().getSocket()
 
-    socket.emit("joinRoom",joinMessage)
-
+    
     if (!username.trim() || !roomId.trim()) {
       alert("Both fields are required.");
       return;
     }
+    
+    socket.emit("joinRoom",joinMessage)
+  
 
-    const message = {
-      username,
-      roomId,
-    };
-
-    socket?.emit("joinRoom", message);
-
-    console.log("Join room event sent:", message);
+    console.log("Join room event sent:", joinMessage);
 
     if(socket){
         nav("/main")
