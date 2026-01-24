@@ -22,6 +22,7 @@ interface ChildrenTypes {
 export function GlobalProvider({ children }: ChildrenTypes) {
   const [msgs, setMsgs] = useState<ChatMessage[]>([]);
   const socketRef = useRef<Socket | null>(null);
+  
 
   useEffect(() => {
     const socketManager = SocketManager.getSocketInstance();
@@ -29,6 +30,7 @@ export function GlobalProvider({ children }: ChildrenTypes) {
 
     const socket = socketManager.getSocket();
     socketRef.current = socket;
+
 
     socket.on("system", (msg: SystemMessage) => {
       toast.success(msg.msg);

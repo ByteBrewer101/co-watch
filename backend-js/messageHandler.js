@@ -8,17 +8,10 @@ function createMessage(message) {
     return currMessage
 }
 
-
 function sendMessageOnEvent(message, socket, eventName) {
     const currMessage = createMessage(message);
     socket.emit(`${eventName}`, currMessage);
 }
-
-
-
-
-
-
 
 function sendMessageToRoom(msg, roomId) {
 
