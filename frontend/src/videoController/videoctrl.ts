@@ -10,4 +10,12 @@ export function videoPause(videoRef: React.RefObject<HTMLVideoElement | null>) {
   }
 }
 
-export function videoSync() {}
+export function seekTo(
+  videoRef: React.RefObject<HTMLVideoElement | null>,
+  timeInSeconds: number,
+) {
+  if (videoRef.current) {
+    videoRef.current.currentTime = timeInSeconds;
+    console.log(timeInSeconds);
+  }
+}

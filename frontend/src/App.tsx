@@ -18,7 +18,7 @@ function App() {
     <GlobalProvider>
     <BrowserRouter>
       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-        <NavBar />
+        <NavBar/>
         <Routes>
           <Route path="/" element=<Homepage /> />
           <Route path="/main" element=<MainPage /> />

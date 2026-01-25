@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { SocketManager } from "@/sockets/socketManager";
 import { toast } from "sonner";
 import type { Socket } from "socket.io-client";
-import { videoPause, videoPlay } from "@/videoController/videoctrl";
+import { seekTo, videoPause, videoPlay } from "@/videoController/videoctrl";
 
 interface ChatMessage {
   userName: string;
@@ -18,6 +18,7 @@ interface SystemMessage {
 
 interface ControlMessage {
   type: string;
+  timeInSeconds?: number;
 }
 
 interface ChildrenTypes {
@@ -46,13 +47,18 @@ export function GlobalProvider({ children }: ChildrenTypes) {
     });
 
     socket.on("ctrlMessage", (msg: ControlMessage) => {
-      const currType = msg.type;
+      const {type, timeInSeconds} = msg
 
-      if (currType === "play") {
+      if (type === "play") {
         videoPlay(videoRef);
-      } else if (currType === "pause") {
+        console.log("play");
+      } else if (type === "pause") {
         videoPause(videoRef);
-      } else {
+        console.log("pause");
+      } else if(type === "sync" && typeof timeInSeconds === "number"){
+        seekTo(videoRef,timeInSeconds);
+        console.log("sync");
+      }else {
         console.log("Invalid type of ctrl");
       }
     });
@@ -69,8 +75,13 @@ export function GlobalProvider({ children }: ChildrenTypes) {
     socketRef.current.emit("sendChat", msg);
   };
 
+  const SendControl = (msg : ControlMessage)=>{
+    if(!socketRef.current) return;
+    socketRef.current.emit("sendCtrl", msg)
+  }
+
   return (
-    <GlobalContext.Provider value={{ msgs, sendMessage, videoRef }}>
+    <GlobalContext.Provider value={{ msgs, sendMessage, videoRef, SendControl }}>
       {children}
     </GlobalContext.Provider>
   );
