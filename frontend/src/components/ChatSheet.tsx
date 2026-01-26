@@ -1,25 +1,29 @@
-// components/ChatSheet/ChatSheet.tsx
 import { useContext, useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from "@/components/ui/sheet";
 import { GlobalContext } from "@/ContextApi/Contexts";
-import { MessageSquare, Send, User, Clock, X } from "lucide-react";
+import { MessageSquare, Send, User, X, Sparkles } from "lucide-react";
 import type { ChatMessage } from "@/utils/types";
+import { motion, AnimatePresence } from "framer-motion";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface ChatSheetProps {
   onClose?: () => void;
 }
 
 export function ChatSheet({ onClose }: ChatSheetProps) {
- const { msgs, sendMessage } = useContext(GlobalContext) as {
-     msgs: ChatMessage[];
-     sendMessage: (msg: ChatMessage) => void;
-   };
+  const { msgs, sendMessage, userCount, roomId } = useContext(GlobalContext) as {
+    msgs: ChatMessage[];
+    sendMessage: (msg: ChatMessage) => void;
+    userCount: number; // Add this to your context
+    roomId: string;    // Add this to your context
+  };
   const [input, setInput] = useState<string>("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -59,87 +63,124 @@ export function ChatSheet({ onClose }: ChatSheetProps) {
     });
   };
 
+  const messageVariants = {
+    hidden: { opacity: 0, x: -20 },
+    visible: (custom: number) => ({
+      opacity: 1,
+      x: 0,
+      transition: {
+        delay: custom * 0.05,
+        type: "spring" as const,
+        stiffness: 100
+      }
+    })
+  };
+
   return (
-    <SheetContent side="right" className="w-full sm:w-[400px] p-0 border-l border-gray-800 bg-gradient-to-b from-gray-900 to-black">
-      <SheetHeader className="p-6 bg-gradient-to-r from-purple-900/30 to-pink-900/30 border-b border-gray-800">
+    <SheetContent side="right" className="w-full sm:w-[400px] p-0 border-l">
+      <SheetHeader className="p-6 border-b bg-gradient-to-r from-primary/5 to-pink-500/5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-2 rounded-lg">
+            <div className="bg-gradient-to-r from-primary to-pink-600 p-2 rounded-lg">
               <MessageSquare className="h-5 w-5 text-white" />
             </div>
-            <SheetTitle className="text-xl font-bold text-white">Live Chat</SheetTitle>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="text-sm text-gray-400 flex items-center gap-1">
-              <User className="h-4 w-4" />
-              <span>{msgs.length} messages</span>
+            <div>
+              <SheetTitle className="text-xl font-bold">Live Chat</SheetTitle>
+              <p className="text-sm text-muted-foreground">
+                Connected to room: {roomId || "/room-id/"}
+              </p>
             </div>
-            <SheetTrigger asChild>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-8 w-8 text-gray-400 hover:text-white hover:bg-white/10"
-                onClick={onClose}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </SheetTrigger>
+          </div>
+          <div className="flex items-center gap-3">
+            <Badge variant="secondary" className="gap-1">
+              <User className="h-3 w-3" />
+              {userCount || 1}
+            </Badge>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-8 w-8"
+              onClick={onClose}
+            >
+              <X className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </SheetHeader>
 
       <div className="flex flex-col h-[calc(100vh-73px)]">
         {/* Chat messages area */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-gray-900/50 to-transparent">
-          {msgs.length === 0 && (
-            <div className="flex flex-col items-center justify-center h-full text-gray-500">
-              <MessageSquare className="h-16 w-16 mb-4 opacity-30" />
-              <p className="text-lg font-medium">No messages yet</p>
-              <p className="text-sm mt-2">Start the conversation!</p>
-            </div>
-          )}
-
-          {msgs.map((m: ChatMessage, idx: number) => {
-            const isYou = m.userName === "You";
-            return (
-              <div
-                key={idx}
-                className={`flex ${isYou ? "justify-end" : "justify-start"}`}
+        <div className="flex-1 overflow-y-auto p-4">
+          <AnimatePresence>
+            {msgs.length === 0 && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="flex flex-col items-center justify-center h-full text-muted-foreground p-8"
               >
-                <div
-                  className={`max-w-[80%] rounded-2xl p-4 relative ${
-                    isYou
-                      ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-br-none"
-                      : "bg-gray-800/50 text-gray-100 rounded-bl-none backdrop-blur-sm"
-                  }`}
-                >
-                  {/* Username */}
-                  {!isYou && (
-                    <div className="flex items-center gap-2 mb-1">
-                      <div className="bg-gradient-to-r from-purple-500 to-pink-500 w-2 h-2 rounded-full"></div>
-                      <p className="text-sm font-semibold">{m.userName}</p>
-                    </div>
-                  )}
-                  
-                  {/* Message text */}
-                  <p className="text-sm break-words pr-12">{m.msg}</p>
+                <Card className="border-dashed bg-transparent">
+                  <CardContent className="p-6 text-center">
+                    <Sparkles className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
+                    <h3 className="text-lg font-medium mb-2">No messages yet</h3>
+                    <p className="text-sm">Start the conversation!</p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
 
-                  {/* Timestamp */}
-                  <div className="absolute bottom-2 right-3 flex items-center gap-1 text-xs opacity-80">
-                    <Clock className="h-3 w-3" />
-                    {formatTime(m.timestamp)}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-          <div ref={messagesEndRef} />
+            <div className="space-y-3">
+              {msgs.map((m: ChatMessage, idx: number) => {
+                const isYou = m.userName === "You";
+                return (
+                  <motion.div
+                    key={idx}
+                    custom={idx}
+                    variants={messageVariants}
+                    initial="hidden"
+                    animate="visible"
+                    className={`flex ${isYou ? "justify-end" : "justify-start"}`}
+                  >
+                    <div
+                      className={`max-w-[85%] rounded-2xl p-3 relative ${
+                        isYou
+                          ? "bg-gradient-to-r from-primary to-pink-600 text-primary-foreground"
+                          : "bg-muted"
+                      }`}
+                    >
+                      {/* Username */}
+                      {!isYou && (
+                        <div className="flex items-center gap-2 mb-1">
+                          <div className="bg-gradient-to-r from-primary to-pink-500 w-2 h-2 rounded-full"></div>
+                          <p className="text-xs font-medium">{m.userName}</p>
+                        </div>
+                      )}
+                      
+                      {/* Message text */}
+                      <p className="text-sm break-words pr-14 pb-1">{m.msg}</p>
+
+                      {/* Timestamp */}
+                      <div className={`absolute bottom-2 right-2 flex items-center gap-1 text-xs ${
+                        isYou ? "opacity-90" : "text-muted-foreground"
+                      }`}>
+                        {formatTime(m.timestamp)}
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+              <div ref={messagesEndRef} />
+            </div>
+          </AnimatePresence>
         </div>
 
         {/* Input area */}
-        <div className="p-4 border-t border-gray-800 bg-gray-900/50 backdrop-blur-sm">
-          <div className="flex gap-2">
-            <input
+        <div className="p-4 border-t bg-background/50 backdrop-blur-sm">
+          <motion.div 
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="flex gap-2"
+          >
+            <Input
               type="text"
               placeholder="Type your message..."
               value={input}
@@ -147,17 +188,20 @@ export function ChatSheet({ onClose }: ChatSheetProps) {
                 setInput(e.target.value)
               }
               onKeyDown={handleKeyDown}
-              className="flex-1 bg-gray-800/50 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent backdrop-blur-sm"
+              className="flex-1"
               autoComplete="off"
             />
-            <Button 
-              onClick={handleSend} 
-              disabled={!input.trim()}
-              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-6 rounded-xl"
-            >
-              <Send className="h-5 w-5" />
-            </Button>
-          </div>
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button 
+                onClick={handleSend} 
+                disabled={!input.trim()}
+                size="icon"
+                className="h-9 w-9"
+              >
+                <Send className="h-5 w-5" />
+              </Button>
+            </motion.div>
+          </motion.div>
         </div>
       </div>
     </SheetContent>

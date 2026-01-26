@@ -29,6 +29,7 @@ export function GlobalProvider({ children }: ChildrenTypes) {
   const [msgs, setMsgs] = useState<ChatMessage[]>([]);
   const socketRef = useRef<Socket | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  
 
   useEffect(() => {
     const socketManager = SocketManager.getSocketInstance();

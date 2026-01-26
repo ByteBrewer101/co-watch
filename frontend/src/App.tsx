@@ -2,7 +2,6 @@
 import { BrowserRouter, Routes,Route } from "react-router-dom";
 import { ThemeProvider } from "./components/theme-provider";
 import { TestPage } from "./pages/testpage/Testpage";
-import { NavBar } from "./components/NavBar";
 import { Homepage } from "./pages/homepage/Homepage";
 
 import { MainPage } from "./pages/mainpage/MainPage";
@@ -18,7 +17,6 @@ function App() {
     <GlobalProvider>
     <BrowserRouter>
       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-        <NavBar/>
         <Routes>
           <Route path="/" element=<Homepage /> />
           <Route path="/main" element=<MainPage /> />
