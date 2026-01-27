@@ -7,7 +7,7 @@ export interface ChatMessage {
 
 export interface ControlMessage {
   type: string;
-  timeInSeconds?: string;
+  timeInSeconds?: number;
 }
 
 export interface GlobalContextType {

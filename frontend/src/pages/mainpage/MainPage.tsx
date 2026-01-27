@@ -70,11 +70,11 @@ export function MainPage() {
           </motion.div>
 
           {/* Main Content */}
-          <div className="flex flex-col lg:flex-row gap-4">
+          <div className="flex flex-col lg:flex-row gap-4 min-h-0"> {/* Added min-h-0 */}
             {/* Video Player Area */}
             <motion.div
               variants={itemVariants}
-              className={`flex-1 ${isChatOpen ? 'lg:w-[calc(100%-400px)]' : 'w-full'} transition-all duration-300`}
+              className={`flex-1 ${isChatOpen ? 'lg:w-[calc(100%-400px)]' : 'w-full'} transition-all duration-300 flex items-start`} 
             >
               <VideoPlayer isChatOpen={isChatOpen} />
             </motion.div>

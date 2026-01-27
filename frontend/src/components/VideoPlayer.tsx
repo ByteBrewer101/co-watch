@@ -1,12 +1,13 @@
 import { useContext, useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { GlobalContext } from "@/ContextApi/Contexts";
-import { Play, Pause, RefreshCw, Maximize2, Minimize2 } from "lucide-react";
+import { Play, Pause, RefreshCw, Maximize2, Minimize2, SkipBack, SkipForward } from "lucide-react";
 import { ChatSheetTrigger } from "./ChatSheetTrigger";
 import type { ControlMessage } from "@/utils/types";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Slider } from "@/components/ui/slider";
 
 interface VideoPlayerProps {
   isChatOpen: boolean;
@@ -21,6 +22,8 @@ export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showControls, setShowControls] = useState(true);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
   const videoContainerRef = useRef<HTMLDivElement>(null);
   const controlsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -52,6 +55,55 @@ export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
     setIsPlaying(false);
   };
 
+  const handleSkipBackward = () => {
+    if (videoRef.current) {
+      const newTime = Math.max(0, videoRef.current.currentTime - 10);
+      videoRef.current.currentTime = newTime;
+      const currCtrl: ControlMessage = {
+        type: "sync",
+        timeInSeconds: newTime
+      };
+      SendControl(currCtrl);
+      setCurrentTime(newTime);
+    }
+  };
+
+  const handleSkipForward = () => {
+    if (videoRef.current) {
+      const newTime = Math.min(duration, videoRef.current.currentTime + 10);
+      videoRef.current.currentTime = newTime;
+      const currCtrl: ControlMessage = {
+        type: "sync",
+        timeInSeconds: newTime
+      };
+      SendControl(currCtrl);
+      setCurrentTime(newTime);
+    }
+  };
+
+  const handleSeek = (value: number[]) => {
+    if (videoRef.current) {
+      const newTime = value[0];
+      videoRef.current.currentTime = newTime;
+      const currCtrl: ControlMessage = {
+        type: "sync",
+        timeInSeconds: newTime
+      };
+      SendControl(currCtrl);
+      setCurrentTime(newTime);
+    }
+  };
+
+  const handleSync = () => {
+    if (videoRef.current) {
+      const currCtrl: ControlMessage = {
+        type: "sync",
+        timeInSeconds: videoRef.current.currentTime
+      };
+      SendControl(currCtrl);
+    }
+  };
+
   const resetControlsTimer = () => {
     setShowControls(true);
     if (controlsTimeoutRef.current) {
@@ -70,11 +122,25 @@ export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
       setShowControls(true);
     };
 
+    const updateTime = () => {
+      if (videoRef.current) {
+        setCurrentTime(videoRef.current.currentTime);
+      }
+    };
+
+    const handleLoadedMetadata = () => {
+      if (videoRef.current) {
+        setDuration(videoRef.current.duration);
+      }
+    };
+
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     
     if (videoRef.current) {
       videoRef.current.onplay = () => setIsPlaying(true);
       videoRef.current.onpause = () => setIsPlaying(false);
+      videoRef.current.ontimeupdate = updateTime;
+      videoRef.current.onloadedmetadata = handleLoadedMetadata;
     }
 
     return () => {
@@ -85,6 +151,12 @@ export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
     };
   }, []);
 
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  };
+
   return (
     <motion.div 
       ref={videoContainerRef}
@@ -93,7 +165,7 @@ export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
       transition={{ type: "spring", stiffness: 100 }}
       onMouseMove={resetControlsTimer}
       onTouchStart={resetControlsTimer}
-      className="relative w-full h-full flex flex-col bg-card border rounded-2xl overflow-hidden group"
+      className="relative w-full h-[85vh] max-h-[600px] flex flex-col bg-card border rounded-2xl overflow-hidden group"
     >
       {/* Video area */}
       <div className="flex-1 relative overflow-hidden">
@@ -115,6 +187,24 @@ export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
               <Card className="bg-background/80 backdrop-blur-md border-border/50">
                 <CardContent className="p-3">
                   <div className="flex items-center gap-2">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button 
+                            onClick={handleSkipBackward}
+                            size="icon"
+                            variant="ghost"
+                            className="h-12 w-12"
+                          >
+                            <SkipBack className="h-6 w-6" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          -10 seconds
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -141,7 +231,25 @@ export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button 
-                            // onClick={handleSync}
+                            onClick={handleSkipForward}
+                            size="icon"
+                            variant="ghost"
+                            className="h-12 w-12"
+                          >
+                            <SkipForward className="h-6 w-6" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          +10 seconds
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button 
+                            onClick={handleSync}
                             size="icon"
                             variant="ghost"
                             className="h-12 w-12"
@@ -198,6 +306,24 @@ export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button 
+                  onClick={handleSkipBackward}
+                  size="icon"
+                  variant="ghost"
+                  className="h-10 w-10"
+                >
+                  <SkipBack className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                -10 seconds
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
                   onClick={isPlaying ? handlePause : handlePlay}
                   size="icon"
                   variant="ghost"
@@ -220,7 +346,25 @@ export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button 
-                  // onClick={handleSync}
+                  onClick={handleSkipForward}
+                  size="icon"
+                  variant="ghost"
+                  className="h-10 w-10"
+                >
+                  <SkipForward className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                +10 seconds
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  onClick={handleSync}
                   size="icon"
                   variant="ghost"
                   className="h-10 w-10"
@@ -233,6 +377,25 @@ export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
+        </div>
+        
+        {/* Video timeline/progress bar - Moved to be between left and right controls */}
+        <div className="flex-1 max-w-2xl mx-4">
+          <div className="flex items-center gap-1">
+            <span className="text-xs text-muted-foreground min-w-[40px]">
+              {formatTime(currentTime)}
+            </span>
+            <Slider
+              value={[currentTime]}
+              max={duration || 100}
+              step={0.1}
+              onValueChange={handleSeek}
+              className="flex-1"
+            />
+            <span className="text-xs text-muted-foreground min-w-[40px]">
+              {formatTime(duration)}
+            </span>
+          </div>
         </div>
         
         <div className="flex items-center gap-2">
