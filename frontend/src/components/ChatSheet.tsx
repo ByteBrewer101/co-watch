@@ -12,13 +12,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { getUserDetails } from "@/utils/helper.utils";
 
 interface ChatSheetProps {
   onClose?: () => void;
 }
 
 export function ChatSheet({ onClose }: ChatSheetProps) {
-  const { msgs, sendMessage, userCount, roomId } = useContext(GlobalContext) as {
+  const currUser = getUserDetails()
+  const { msgs, sendMessage, userCount} = useContext(GlobalContext) as {
     msgs: ChatMessage[];
     sendMessage: (msg: ChatMessage) => void;
     userCount: number; // Add this to your context
@@ -87,7 +89,7 @@ export function ChatSheet({ onClose }: ChatSheetProps) {
             <div>
               <SheetTitle className="text-xl font-bold">Live Chat</SheetTitle>
               <p className="text-sm text-muted-foreground">
-                Connected to room: {roomId || "/room-id/"}
+                Connected to room: {currUser.roomId}
               </p>
             </div>
           </div>

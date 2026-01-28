@@ -3,34 +3,31 @@ import { Sheet } from "@/components/ui/sheet";
 import { VideoPlayer } from "@/components/VideoPlayer";
 import { ChatSheet } from "@/components/ChatSheet";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageSquare, Users } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Users } from "lucide-react";
 import { SocketManager } from "@/sockets/socketManager";
 import { useNavigate } from "react-router-dom";
+import { getUserDetails } from "@/utils/helper.utils";
 
 export function MainPage() {
   const [isChatOpen, setIsChatOpen] = useState(false);
 
   const navigate = useNavigate();
+  const currUser = getUserDetails();
 
   useEffect(() => {
-    const userDetails = localStorage.getItem("userDetails");
-    if (userDetails != null) {
-      const currUser = JSON.parse(userDetails);
+    if (currUser) {
       const socket = SocketManager.getSocketInstance().getSocket();
       socket.emit("joinRoom", currUser);
     } else {
       navigate("/");
     }
-  }, []);
+  }, [currUser, navigate]);
 
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
+      transition: { staggerChildren: 0.1 },
     },
   };
 
@@ -39,10 +36,7 @@ export function MainPage() {
     visible: {
       y: 0,
       opacity: 1,
-      transition: {
-        type: "spring" as const,
-        stiffness: 100,
-      },
+      transition: { type: "spring" as const, stiffness: 100 },
     },
   };
 
@@ -78,30 +72,35 @@ export function MainPage() {
                 </div>
               </motion.div>
 
-              <motion.div
-                variants={itemVariants}
-                className="flex items-center gap-3"
-              >
-                <Badge variant="secondary" className="gap-2">
-                  <MessageSquare className="h-4 w-4" />
-                  Live Chat
-                </Badge>
-              </motion.div>
+              {currUser && (
+                <motion.div
+                  variants={itemVariants}
+                  className="flex items-center gap-4"
+                >
+                  <div>
+                    <p className="text-2xl font-bold">
+                      Welcome{" "}
+                      <span className="text-pink-600">
+                        {currUser?.userName || "Guest"}
+                      </span>
+                    </p>
+                  </div>
+                </motion.div>
+              )}
             </div>
           </motion.div>
 
           {/* Main Content */}
           <div className="flex flex-col lg:flex-row gap-4 min-h-0">
-            {" "}
-            {/* Added min-h-0 */}
-            {/* Video Player Area */}
             <motion.div
               variants={itemVariants}
-              className={`flex-1 ${isChatOpen ? "lg:w-[calc(100%-400px)]" : "w-full"} transition-all duration-300 flex items-start`}
+              className={`flex-1 ${
+                isChatOpen ? "lg:w-[calc(100%-400px)]" : "w-full"
+              } transition-all duration-300 flex items-start`}
             >
               <VideoPlayer isChatOpen={isChatOpen} />
             </motion.div>
-            {/* Chat Sidebar */}
+
             <AnimatePresence>
               {isChatOpen && (
                 <motion.div

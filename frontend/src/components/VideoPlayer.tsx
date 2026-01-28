@@ -210,7 +210,7 @@ export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
       transition={{ type: "spring", stiffness: 100 }}
       onMouseMove={resetControlsTimer}
       onTouchStart={resetControlsTimer}
-      className="relative w-full h-[75vh] max-h-[600px] flex flex-col bg-card border rounded-2xl overflow-hidden group"
+      className="relative w-full h-[85vh] max-h-[600px] flex flex-col bg-card border rounded-2xl overflow-hidden group"
     >
       {/* Video area */}
       <div className="flex-1 relative overflow-hidden">
