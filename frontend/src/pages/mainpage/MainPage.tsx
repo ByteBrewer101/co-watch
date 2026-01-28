@@ -1,22 +1,37 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Sheet } from "@/components/ui/sheet";
 import { VideoPlayer } from "@/components/VideoPlayer";
 import { ChatSheet } from "@/components/ChatSheet";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquare, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { SocketManager } from "@/sockets/socketManager";
+import { useNavigate } from "react-router-dom";
 
 export function MainPage() {
   const [isChatOpen, setIsChatOpen] = useState(false);
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const userDetails = localStorage.getItem("userDetails");
+    if (userDetails != null) {
+      const currUser = JSON.parse(userDetails);
+      const socket = SocketManager.getSocketInstance().getSocket();
+      socket.emit("joinRoom", currUser);
+    } else {
+      navigate("/");
+    }
+  }, []);
 
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1
-      }
-    }
+        staggerChildren: 0.1,
+      },
+    },
   };
 
   const itemVariants = {
@@ -26,9 +41,9 @@ export function MainPage() {
       opacity: 1,
       transition: {
         type: "spring" as const,
-        stiffness: 100
-      }
-    }
+        stiffness: 100,
+      },
+    },
   };
 
   return (
@@ -41,14 +56,17 @@ export function MainPage() {
       <Sheet open={isChatOpen} onOpenChange={setIsChatOpen}>
         <div className="container mx-auto px-4 py-4">
           {/* Header */}
-          <motion.div 
+          <motion.div
             variants={containerVariants}
             initial="hidden"
             animate="visible"
             className="mb-6"
           >
             <div className="flex items-center justify-between">
-              <motion.div variants={itemVariants} className="flex items-center gap-4">
+              <motion.div
+                variants={itemVariants}
+                className="flex items-center gap-4"
+              >
                 <div className="bg-gradient-to-r from-primary to-pink-600 p-2 rounded-xl">
                   <Users className="h-6 w-6 text-white" />
                 </div>
@@ -59,8 +77,11 @@ export function MainPage() {
                   </p>
                 </div>
               </motion.div>
-              
-              <motion.div variants={itemVariants} className="flex items-center gap-3">
+
+              <motion.div
+                variants={itemVariants}
+                className="flex items-center gap-3"
+              >
                 <Badge variant="secondary" className="gap-2">
                   <MessageSquare className="h-4 w-4" />
                   Live Chat
@@ -70,15 +91,16 @@ export function MainPage() {
           </motion.div>
 
           {/* Main Content */}
-          <div className="flex flex-col lg:flex-row gap-4 min-h-0"> {/* Added min-h-0 */}
+          <div className="flex flex-col lg:flex-row gap-4 min-h-0">
+            {" "}
+            {/* Added min-h-0 */}
             {/* Video Player Area */}
             <motion.div
               variants={itemVariants}
-              className={`flex-1 ${isChatOpen ? 'lg:w-[calc(100%-400px)]' : 'w-full'} transition-all duration-300 flex items-start`} 
+              className={`flex-1 ${isChatOpen ? "lg:w-[calc(100%-400px)]" : "w-full"} transition-all duration-300 flex items-start`}
             >
               <VideoPlayer isChatOpen={isChatOpen} />
             </motion.div>
-
             {/* Chat Sidebar */}
             <AnimatePresence>
               {isChatOpen && (

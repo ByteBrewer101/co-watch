@@ -22,6 +22,8 @@ io.on("connection", (socket) => {
   ioHandler(socket);
 });
 
+
+
 function ioHandler(socket) {
   socket.on("joinRoom", (userDetails) => {
     handleJoinRoom(userDetails, socket);
@@ -40,13 +42,18 @@ function ioHandler(socket) {
   });
   socket.on("sendCtrl", (ctrlDetails) => {
     const currUser = getUserInfo(socket.id);
+    if(currUser!=null){
     const currRoom = currUser.roomId;
     const currCtrlDetails = {
       ...ctrlDetails,
       roomId: currRoom,
     };
     handleControl(currCtrlDetails, io);
-  });
+}
+else{
+  sendMessageOnEvent("No User Found", socket, "system");
+  return
+}});
 
   socket.on("disconnect", () => {
     deactivateUser(socket.id);
@@ -70,6 +77,7 @@ function handleJoinRoom(userDetails, socket) {
     socket.disconnect(true);
   }
 }
+
 
 function handleChat(msgDetails, socket) {
   socket.to(msgDetails.roomId).emit("message", msgDetails);
