@@ -1,11 +1,10 @@
 import { useContext, useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { GlobalContext } from "@/ContextApi/Contexts";
-import { Play, Pause, RefreshCw, Maximize2, Minimize2, SkipBack, SkipForward } from "lucide-react";
+import { Play, Pause, RefreshCw, Maximize2, Minimize2, SkipBack, SkipForward, Volume2, VolumeX } from "lucide-react";
 import { ChatSheetTrigger } from "./ChatSheetTrigger";
 import type { ControlMessage } from "@/utils/types";
-import { motion, AnimatePresence } from "framer-motion";
-import { Card, CardContent } from "@/components/ui/card";
+import { motion} from "framer-motion";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Slider } from "@/components/ui/slider";
 
@@ -21,9 +20,12 @@ export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
   };
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [showControls, setShowControls] = useState(true);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [isMuted, setIsMuted] = useState(false);
+  const [volume, setVolume] = useState(100);
   const videoContainerRef = useRef<HTMLDivElement>(null);
   const controlsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -104,6 +106,39 @@ export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
     }
   };
 
+  const toggleMute = () => {
+    if (videoRef.current) {
+      const willBeMuted = !videoRef.current.muted;
+      videoRef.current.muted = willBeMuted;
+      setIsMuted(willBeMuted);
+      
+      // Also set volume to 0 if muting, restore to previous volume if unmuting
+      if (willBeMuted && volume > 0) {
+        setVolume(0);
+      } else if (!willBeMuted && volume === 0) {
+        setVolume(100);
+        videoRef.current.volume = 1;
+      }
+    }
+  };
+
+  const handleVolumeChange = (value: number[]) => {
+    if (videoRef.current) {
+      const newVolume = value[0] / 100;
+      videoRef.current.volume = newVolume;
+      setVolume(value[0]);
+      
+      // Update mute state based on volume
+      if (value[0] === 0) {
+        videoRef.current.muted = true;
+        setIsMuted(true);
+      } else if (videoRef.current.muted) {
+        videoRef.current.muted = false;
+        setIsMuted(false);
+      }
+    }
+  };
+
   const resetControlsTimer = () => {
     setShowControls(true);
     if (controlsTimeoutRef.current) {
@@ -131,6 +166,10 @@ export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
     const handleLoadedMetadata = () => {
       if (videoRef.current) {
         setDuration(videoRef.current.duration);
+        if (videoRef.current.volume !== undefined) {
+          setVolume(videoRef.current.volume * 100);
+          setIsMuted(videoRef.current.muted);
+        }
       }
     };
 
@@ -141,6 +180,12 @@ export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
       videoRef.current.onpause = () => setIsPlaying(false);
       videoRef.current.ontimeupdate = updateTime;
       videoRef.current.onloadedmetadata = handleLoadedMetadata;
+      videoRef.current.onvolumechange = () => {
+        if (videoRef.current) {
+          setIsMuted(videoRef.current.muted);
+          setVolume(videoRef.current.volume * 100);
+        }
+      };
     }
 
     return () => {
@@ -165,7 +210,7 @@ export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
       transition={{ type: "spring", stiffness: 100 }}
       onMouseMove={resetControlsTimer}
       onTouchStart={resetControlsTimer}
-      className="relative w-full h-[85vh] max-h-[600px] flex flex-col bg-card border rounded-2xl overflow-hidden group"
+      className="relative w-full h-[75vh] max-h-[600px] flex flex-col bg-card border rounded-2xl overflow-hidden group"
     >
       {/* Video area */}
       <div className="flex-1 relative overflow-hidden">
@@ -175,123 +220,7 @@ export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
           src="https://www.w3schools.com/html/mov_bbb.mp4"
         />
         
-        {/* Fullscreen floating controls */}
-        <AnimatePresence>
-          {isFullscreen && showControls && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 20 }}
-              className="absolute bottom-8 left-1/2 transform -translate-x-1/2"
-            >
-              <Card className="bg-background/80 backdrop-blur-md border-border/50">
-                <CardContent className="p-3">
-                  <div className="flex items-center gap-2">
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button 
-                            onClick={handleSkipBackward}
-                            size="icon"
-                            variant="ghost"
-                            className="h-12 w-12"
-                          >
-                            <SkipBack className="h-6 w-6" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          -10 seconds
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button 
-                            onClick={isPlaying ? handlePause : handlePlay}
-                            size="icon"
-                            variant="ghost"
-                            className="h-12 w-12"
-                          >
-                            {isPlaying ? (
-                              <Pause className="h-6 w-6" />
-                            ) : (
-                              <Play className="h-6 w-6" />
-                            )}
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          {isPlaying ? "Pause" : "Play"}
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button 
-                            onClick={handleSkipForward}
-                            size="icon"
-                            variant="ghost"
-                            className="h-12 w-12"
-                          >
-                            <SkipForward className="h-6 w-6" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          +10 seconds
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button 
-                            onClick={handleSync}
-                            size="icon"
-                            variant="ghost"
-                            className="h-12 w-12"
-                          >
-                            <RefreshCw className="h-6 w-6" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          Sync
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-
-                    <ChatSheetTrigger />
-                    
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button 
-                            onClick={toggleFullscreen}
-                            size="icon"
-                            variant="ghost"
-                            className="h-12 w-12"
-                          >
-                            {isFullscreen ? (
-                              <Minimize2 className="h-6 w-6" />
-                            ) : (
-                              <Maximize2 className="h-6 w-6" />
-                            )}
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          {isFullscreen ? "Exit fullscreen" : "Fullscreen"}
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* Fullscreen floating controls - Removed as requested */}
       </div>
 
       {/* Bottom controls bar */}
@@ -379,9 +308,9 @@ export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
           </TooltipProvider>
         </div>
         
-        {/* Video timeline/progress bar - Moved to be between left and right controls */}
-        <div className="flex-1 max-w-2xl mx-4">
-          <div className="flex items-center gap-1">
+        {/* Video timeline/progress bar */}
+        <div className="flex-1 max-w-xl mx-4">
+          <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground min-w-[40px]">
               {formatTime(currentTime)}
             </span>
@@ -399,7 +328,54 @@ export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
         </div>
         
         <div className="flex items-center gap-2">
-          <ChatSheetTrigger />
+          {/* Volume Controls */}
+          <div className="flex items-center gap-2">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    onClick={toggleMute}
+                    size="icon"
+                    variant="ghost"
+                    className="h-10 w-10"
+                  >
+                    {isMuted ? (
+                      <VolumeX className="h-5 w-5" />
+                    ) : (
+                      <Volume2 className="h-5 w-5" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {isMuted ? "Unmute" : "Mute"}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            
+            <div className="w-24">
+              <Slider
+                value={[volume]}
+                max={100}
+                step={1}
+                onValueChange={handleVolumeChange}
+                className="w-full"
+              />
+            </div>
+          </div>
+          
+          {/* Fixed ChatSheetTrigger with proper Tooltip styling */}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div>
+                  <ChatSheetTrigger />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                Open chat
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           
           <TooltipProvider>
             <Tooltip>
