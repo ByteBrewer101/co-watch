@@ -23,7 +23,7 @@ export function ChatSheet({ onClose }: ChatSheetProps) {
   const { msgs, sendMessage, userCount} = useContext(GlobalContext) as {
     msgs: ChatMessage[];
     sendMessage: (msg: ChatMessage) => void;
-    userCount: number; // Add this to your context
+    userCount: string; // Add this to your context
     roomId: string;    // Add this to your context
   };
   const [input, setInput] = useState<string>("");

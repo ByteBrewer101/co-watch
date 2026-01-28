@@ -1,7 +1,7 @@
 const express = require("express");
 const { Server } = require("socket.io");
 const { sendMessage, sendMessageOnEvent } = require("./messageHandler");
-const { activateUser, getUserInfo, deactivateUser } = require("./userManager");
+const { activateUser, getUserInfo, deactivateUser, getUsersInRoom } = require("./userManager");
 
 const PORT = 5000;
 const app = express();
@@ -70,6 +70,8 @@ function handleJoinRoom(userDetails, socket) {
     activateUser(currUser.id, currUser.userName, currUser.roomId);
     socket.join(currUser.roomId);
     sendMessageOnEvent("Joined Successfully", socket, "system");
+    const numOfUsers = getUsersInRoom(currUser.roomId).length
+    sendMessageOnEvent(numOfUsers, socket, "userCount");
   } else {
     //reject
     sendMessageOnEvent("Invalid Payload", socket, "system");

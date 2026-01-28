@@ -29,7 +29,7 @@ export function GlobalProvider({ children }: ChildrenTypes) {
   const [msgs, setMsgs] = useState<ChatMessage[]>([]);
   const socketRef = useRef<Socket | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  
+  const [count, setCount] = useState<string | null>(null);
 
   useEffect(() => {
     const socketManager = SocketManager.getSocketInstance();
@@ -63,6 +63,10 @@ export function GlobalProvider({ children }: ChildrenTypes) {
         console.log("Invalid type of ctrl");
       }
     });
+    socket.on("userCount", (msg)=>{
+      setCount(msg.msg)
+      console.log(msg);
+    })
 
     return () => {
       socket.disconnect();
@@ -82,7 +86,7 @@ export function GlobalProvider({ children }: ChildrenTypes) {
   }
 
   return (
-    <GlobalContext.Provider value={{ msgs, sendMessage, videoRef, SendControl }}>
+    <GlobalContext.Provider value={{ msgs, sendMessage, videoRef, SendControl, count }}>
       {children}
     </GlobalContext.Provider>
   );
