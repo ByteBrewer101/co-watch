@@ -20,10 +20,10 @@ interface ChatSheetProps {
 
 export function ChatSheet({ onClose }: ChatSheetProps) {
   const currUser = getUserDetails()
-  const { msgs, sendMessage, userCount} = useContext(GlobalContext) as {
+  const { msgs, sendMessage, count} = useContext(GlobalContext) as {
     msgs: ChatMessage[];
     sendMessage: (msg: ChatMessage) => void;
-    userCount: string; // Add this to your context
+    count: number; // Add this to your context
     roomId: string;    // Add this to your context
   };
   const [input, setInput] = useState<string>("");
@@ -35,6 +35,7 @@ export function ChatSheet({ onClose }: ChatSheetProps) {
 
   useEffect(() => {
     scrollToBottom();
+    
   }, [msgs]);
 
   const handleSend = () => {
@@ -96,7 +97,7 @@ export function ChatSheet({ onClose }: ChatSheetProps) {
           <div className="flex items-center gap-3">
             <Badge variant="secondary" className="gap-1">
               <User className="h-3 w-3" />
-              {userCount || 1}
+              {count || 1}
             </Badge>
             <Button
               size="icon"

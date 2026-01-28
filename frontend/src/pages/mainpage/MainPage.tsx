@@ -10,18 +10,19 @@ import { getUserDetails } from "@/utils/helper.utils";
 
 export function MainPage() {
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [currUser] = useState(getUserDetails())
 
   const navigate = useNavigate();
-  const currUser = getUserDetails();
-
+  
   useEffect(() => {
+    
     if (currUser) {
       const socket = SocketManager.getSocketInstance().getSocket();
       socket.emit("joinRoom", currUser);
     } else {
       navigate("/");
     }
-  }, [currUser, navigate]);
+  }, [navigate]);
 
   const containerVariants = {
     hidden: { opacity: 0 },

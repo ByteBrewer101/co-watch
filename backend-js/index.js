@@ -71,6 +71,7 @@ function handleJoinRoom(userDetails, socket) {
     socket.join(currUser.roomId);
     sendMessageOnEvent("Joined Successfully", socket, "system");
     const numOfUsers = getUsersInRoom(currUser.roomId).length
+    console.log(numOfUsers);
     sendMessageOnEvent(numOfUsers, socket, "userCount");
   } else {
     //reject

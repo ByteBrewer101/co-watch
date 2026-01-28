@@ -29,7 +29,7 @@ export function GlobalProvider({ children }: ChildrenTypes) {
   const [msgs, setMsgs] = useState<ChatMessage[]>([]);
   const socketRef = useRef<Socket | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [count, setCount] = useState<string | null>(null);
+  const [count, setCount] = useState<number | null>(null);
 
   useEffect(() => {
     const socketManager = SocketManager.getSocketInstance();
@@ -65,7 +65,7 @@ export function GlobalProvider({ children }: ChildrenTypes) {
     });
     socket.on("userCount", (msg)=>{
       setCount(msg.msg)
-      console.log(msg);
+      console.log("user count is"+msg.msg);
     })
 
     return () => {
