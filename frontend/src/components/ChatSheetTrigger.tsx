@@ -7,22 +7,13 @@ import {
 import { GlobalContext } from "@/ContextApi/Contexts";
 import { MessageSquare } from "lucide-react";
 
-
-export function ChatSheetTrigger()
-
-
- {
+export function ChatSheetTrigger() {
 const {  rec, setRec } = useContext(GlobalContext) as {
  
   rec: number;
   setRec: React.Dispatch<React.SetStateAction<number>>;
 };
 
-function handleClick(){
-  setRec(0)
-  // fsToggle(false)
-
-}
 
 
   return (
@@ -32,7 +23,7 @@ function handleClick(){
         variant="ghost"
         className="h-10 w-10 hover:bg-purple-600/30 text-purple-400 relative"
         title="Open chat"
-        onClick={handleClick}
+        onClick={()=>setRec(0)}
       >
         <MessageSquare className="h-5 w-5" />
         {rec > 0 && (
