@@ -163,11 +163,11 @@ export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
       videoRef.current.src = videoUrl;
 
       // Optionally send control message to sync video change with other users
-      const currCtrl: ControlMessage = {
-        type: "videoChange",
-        videoUrl: videoUrl,
-      };
-      SendControl(currCtrl);
+      // const currCtrl: ControlMessage = {
+      //   type: "videoChange",
+      //   videoUrl: videoUrl,
+      // };
+      // SendControl(currCtrl);
     }
   };
 

@@ -6,12 +6,14 @@ import {
 } from "@/components/ui/sheet";
 import { GlobalContext } from "@/ContextApi/Contexts";
 import { MessageSquare } from "lucide-react";
-import type { ChatMessage } from "@/utils/types";
 
 export function ChatSheetTrigger() {
- const { msgs } = useContext(GlobalContext) as {
-     msgs: ChatMessage[];
-   };
+const {  rec, setRec } = useContext(GlobalContext) as {
+ 
+  rec: number;
+  setRec: React.Dispatch<React.SetStateAction<number>>;
+};
+
 
 
   return (
@@ -21,11 +23,12 @@ export function ChatSheetTrigger() {
         variant="ghost"
         className="h-10 w-10 hover:bg-purple-600/30 text-purple-400 relative"
         title="Open chat"
+        onClick={()=>setRec(0)}
       >
         <MessageSquare className="h-5 w-5" />
-        {msgs.length > 0 && (
+        {rec > 0 && (
           <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-            {msgs.length}
+            {rec}
           </span>
         )}
       </Button>

@@ -27,6 +27,7 @@ interface ChildrenTypes {
 
 export function GlobalProvider({ children }: ChildrenTypes) {
   const [msgs, setMsgs] = useState<ChatMessage[]>([]);
+  const [rec,setRec] = useState<number>(0);
   const socketRef = useRef<Socket | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [count, setCount] = useState<number | null>(null);
@@ -45,6 +46,7 @@ export function GlobalProvider({ children }: ChildrenTypes) {
     socket.on("message", (msg: ChatMessage) => {
       console.log(msg);
       setMsgs((prev) => [...prev, msg]);
+      setRec(c=>c+1);
     });
 
     socket.on("ctrlMessage", (msg: ControlMessage) => {
@@ -86,7 +88,7 @@ export function GlobalProvider({ children }: ChildrenTypes) {
   }
 
   return (
-    <GlobalContext.Provider value={{ msgs, sendMessage, videoRef, SendControl, count }}>
+    <GlobalContext.Provider value={{ msgs, sendMessage, videoRef, SendControl, count,rec,setRec }}>
       {children}
     </GlobalContext.Provider>
   );
