@@ -12,8 +12,8 @@ import {
   Volume2,
   VolumeX,
   Upload,
+  MessageSquare,
 } from "lucide-react";
-import { ChatSheetTrigger } from "./ChatSheetTrigger";
 import type { ControlMessage } from "@/utils/types";
 import { motion } from "framer-motion";
 import {
@@ -23,20 +23,22 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Slider } from "@/components/ui/slider";
+import { ChatPanel } from "./ChatPanel";
 
 interface VideoPlayerProps {
   isChatOpen: boolean;
+  onChatToggle: () => void;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
-  const { videoRef, SendControl } = useContext(GlobalContext) as {
+export function VideoPlayer({ isChatOpen, onChatToggle }: VideoPlayerProps) {
+  const { videoRef, SendControl, rec, setRec } = useContext(GlobalContext) as {
     videoRef: React.RefObject<HTMLVideoElement>;
     SendControl: (msg: ControlMessage) => void;
+    rec: number;
+    setRec: React.Dispatch<React.SetStateAction<number>>;
   };
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [showControls, setShowControls] = useState(true);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -129,7 +131,6 @@ export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
       videoRef.current.muted = willBeMuted;
       setIsMuted(willBeMuted);
 
-      // Also set volume to 0 if muting, restore to previous volume if unmuting
       if (willBeMuted && volume > 0) {
         setVolume(0);
       } else if (!willBeMuted && volume === 0) {
@@ -145,7 +146,6 @@ export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
       videoRef.current.volume = newVolume;
       setVolume(value[0]);
 
-      // Update mute state based on volume
       if (value[0] === 0) {
         videoRef.current.muted = true;
         setIsMuted(true);
@@ -161,13 +161,6 @@ export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
     if (file && videoRef.current) {
       const videoUrl = URL.createObjectURL(file);
       videoRef.current.src = videoUrl;
-
-      // Optionally send control message to sync video change with other users
-      // const currCtrl: ControlMessage = {
-      //   type: "videoChange",
-      //   videoUrl: videoUrl,
-      // };
-      // SendControl(currCtrl);
     }
   };
 
@@ -175,12 +168,17 @@ export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
     fileInputRef.current?.click();
   };
 
+  const handleChatToggle = () => {
+    setRec(0);
+    onChatToggle();
+  };
+
   const resetControlsTimer = () => {
     setShowControls(true);
     if (controlsTimeoutRef.current) {
       clearTimeout(controlsTimeoutRef.current);
     }
-    if (isFullscreen) {
+    if (isFullscreen && isPlaying) {
       controlsTimeoutRef.current = setTimeout(() => {
         setShowControls(false);
       }, 3000);
@@ -246,7 +244,8 @@ export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
       transition={{ type: "spring", stiffness: 100 }}
       onMouseMove={resetControlsTimer}
       onTouchStart={resetControlsTimer}
-      className="relative w-full h-[85vh] max-h-[600px] flex flex-col bg-card border rounded-2xl overflow-hidden group"
+      className={`relative w-full flex bg-card border rounded-2xl overflow-hidden group ${isFullscreen ? "h-screen" : "h-[85vh] max-h-[600px]"
+        }`}
     >
       {/* Hidden file input for video upload */}
       <input
@@ -257,197 +256,220 @@ export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
         className="hidden"
       />
 
-      {/* Video area */}
-      <div className="flex-1 relative overflow-hidden">
-        <video
-          ref={videoRef}
-          className="w-full h-full object-contain bg-black"
-          src="https://www.w3schools.com/html/mov_bbb.mp4"
-        />
-      </div>
-
-      {/* Bottom controls bar */}
-      <motion.div
-        initial={{ y: 10, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.2 }}
-        className="h-14 bg-background/80 backdrop-blur-sm border-t flex items-center justify-between px-4"
-      >
-        <div className="flex items-center gap-2">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  onClick={handleSkipBackward}
-                  size="icon"
-                  variant="ghost"
-                  className="h-10 w-10"
-                >
-                  <SkipBack className="h-5 w-5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>-10 seconds</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  onClick={isPlaying ? handlePause : handlePlay}
-                  size="icon"
-                  variant="ghost"
-                  className="h-10 w-10"
-                >
-                  {isPlaying ? (
-                    <Pause className="h-5 w-5" />
-                  ) : (
-                    <Play className="h-5 w-5" />
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>{isPlaying ? "Pause" : "Play"}</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  onClick={handleSkipForward}
-                  size="icon"
-                  variant="ghost"
-                  className="h-10 w-10"
-                >
-                  <SkipForward className="h-5 w-5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>+10 seconds</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  onClick={handleSync}
-                  size="icon"
-                  variant="ghost"
-                  className="h-10 w-10"
-                >
-                  <RefreshCw className="h-5 w-5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Sync</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+      {/* Main video section */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Video area */}
+        <div className="flex-1 relative overflow-hidden">
+          <video
+            ref={videoRef}
+            className="w-full h-full object-contain bg-black"
+            src="https://www.w3schools.com/html/mov_bbb.mp4"
+          />
         </div>
 
-        {/* Video timeline/progress bar */}
-        <div className="flex-1 max-w-xl mx-4">
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground min-w-[40px]">
-              {formatTime(currentTime)}
-            </span>
-            <Slider
-              value={[currentTime]}
-              max={duration || 100}
-              step={0.1}
-              onValueChange={handleSeek}
-              className="flex-1"
-            />
-            <span className="text-xs text-muted-foreground min-w-[40px]">
-              {formatTime(duration)}
-            </span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {/* Video Upload Button - Added here */}
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  onClick={triggerFileInput}
-                  size="icon"
-                  variant="ghost"
-                  className="h-10 w-10"
-                >
-                  <Upload className="h-5 w-5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Upload video</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
-          {/* Volume Controls */}
+        {/* Bottom controls bar */}
+        <motion.div
+          initial={{ y: 10, opacity: 0 }}
+          animate={{ y: 0, opacity: showControls ? 1 : 0 }}
+          transition={{ duration: 0.2 }}
+          className={`h-14 bg-background/80 backdrop-blur-sm border-t flex items-center justify-between px-4 ${!showControls && isFullscreen ? "pointer-events-none" : ""
+            }`}
+        >
           <div className="flex items-center gap-2">
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
-                    onClick={toggleMute}
+                    onClick={handleSkipBackward}
                     size="icon"
                     variant="ghost"
                     className="h-10 w-10"
                   >
-                    {isMuted ? (
-                      <VolumeX className="h-5 w-5" />
-                    ) : (
-                      <Volume2 className="h-5 w-5" />
-                    )}
+                    <SkipBack className="h-5 w-5" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>{isMuted ? "Unmute" : "Mute"}</TooltipContent>
+                <TooltipContent>-10 seconds</TooltipContent>
               </Tooltip>
             </TooltipProvider>
 
-            <div className="w-24">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={isPlaying ? handlePause : handlePlay}
+                    size="icon"
+                    variant="ghost"
+                    className="h-10 w-10"
+                  >
+                    {isPlaying ? (
+                      <Pause className="h-5 w-5" />
+                    ) : (
+                      <Play className="h-5 w-5" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{isPlaying ? "Pause" : "Play"}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={handleSkipForward}
+                    size="icon"
+                    variant="ghost"
+                    className="h-10 w-10"
+                  >
+                    <SkipForward className="h-5 w-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>+10 seconds</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={handleSync}
+                    size="icon"
+                    variant="ghost"
+                    className="h-10 w-10"
+                  >
+                    <RefreshCw className="h-5 w-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Sync</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+
+          {/* Video timeline/progress bar */}
+          <div className="flex-1 max-w-xl mx-4">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground min-w-[40px]">
+                {formatTime(currentTime)}
+              </span>
               <Slider
-                value={[volume]}
-                max={100}
-                step={1}
-                onValueChange={handleVolumeChange}
-                className="w-full"
+                value={[currentTime]}
+                max={duration || 100}
+                step={0.1}
+                onValueChange={handleSeek}
+                className="flex-1"
               />
+              <span className="text-xs text-muted-foreground min-w-[40px]">
+                {formatTime(duration)}
+              </span>
             </div>
           </div>
 
-          {/* Fixed ChatSheetTrigger with proper Tooltip styling */}
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div>
-                  <ChatSheetTrigger />
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>Open chat</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <div className="flex items-center gap-2">
+            {/* Video Upload Button */}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={triggerFileInput}
+                    size="icon"
+                    variant="ghost"
+                    className="h-10 w-10"
+                  >
+                    <Upload className="h-5 w-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Upload video</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
 
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  onClick={toggleFullscreen}
-                  size="icon"
-                  variant="ghost"
-                  className="h-10 w-10"
-                >
-                  {isFullscreen ? (
-                    <Minimize2 className="h-5 w-5" />
-                  ) : (
-                    <Maximize2 className="h-5 w-5" />
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                {isFullscreen ? "Exit fullscreen" : "Fullscreen"}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-      </motion.div>
+            {/* Volume Controls */}
+            <div className="flex items-center gap-2">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      onClick={toggleMute}
+                      size="icon"
+                      variant="ghost"
+                      className="h-10 w-10"
+                    >
+                      {isMuted ? (
+                        <VolumeX className="h-5 w-5" />
+                      ) : (
+                        <Volume2 className="h-5 w-5" />
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>{isMuted ? "Unmute" : "Mute"}</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+
+              <div className="w-24">
+                <Slider
+                  value={[volume]}
+                  max={100}
+                  step={1}
+                  onValueChange={handleVolumeChange}
+                  className="w-full"
+                />
+              </div>
+            </div>
+
+            {/* Chat toggle button */}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={handleChatToggle}
+                    size="icon"
+                    variant="ghost"
+                    className={`h-10 w-10 relative ${isChatOpen
+                        ? "bg-primary/20 text-primary hover:bg-primary/30"
+                        : "hover:bg-purple-600/30 text-purple-400"
+                      }`}
+                    title="Toggle chat"
+                  >
+                    <MessageSquare className="h-5 w-5" />
+                    {rec > 0 && !isChatOpen && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
+                        {rec > 99 ? "99+" : rec}
+                      </span>
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {isChatOpen ? "Close chat" : "Open chat"}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={toggleFullscreen}
+                    size="icon"
+                    variant="ghost"
+                    className="h-10 w-10"
+                  >
+                    {isFullscreen ? (
+                      <Minimize2 className="h-5 w-5" />
+                    ) : (
+                      <Maximize2 className="h-5 w-5" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Chat Panel - Inside the container so it works in fullscreen */}
+      <ChatPanel isOpen={isChatOpen} onClose={onChatToggle} />
     </motion.div>
   );
 }

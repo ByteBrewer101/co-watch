@@ -27,7 +27,7 @@ interface ChildrenTypes {
 
 export function GlobalProvider({ children }: ChildrenTypes) {
   const [msgs, setMsgs] = useState<ChatMessage[]>([]);
-  const [rec,setRec] = useState<number>(0);
+  const [rec, setRec] = useState<number>(0);
   const socketRef = useRef<Socket | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [count, setCount] = useState<number | null>(null);
@@ -46,11 +46,11 @@ export function GlobalProvider({ children }: ChildrenTypes) {
     socket.on("message", (msg: ChatMessage) => {
       console.log(msg);
       setMsgs((prev) => [...prev, msg]);
-      setRec(c=>c+1);
+      setRec(c => c + 1);
     });
 
     socket.on("ctrlMessage", (msg: ControlMessage) => {
-      const {type, timeInSeconds} = msg
+      const { type, timeInSeconds } = msg
 
       if (type === "play") {
         videoPlay(videoRef);
@@ -58,16 +58,16 @@ export function GlobalProvider({ children }: ChildrenTypes) {
       } else if (type === "pause") {
         videoPause(videoRef);
         console.log("pause");
-      } else if(type === "sync" && typeof timeInSeconds === "number"){
-        seekTo(videoRef,timeInSeconds);
+      } else if (type === "sync" && typeof timeInSeconds === "number") {
+        seekTo(videoRef, timeInSeconds);
         console.log("sync");
-      }else {
+      } else {
         console.log("Invalid type of ctrl");
       }
     });
-    socket.on("userCount", (msg)=>{
+    socket.on("userCount", (msg) => {
       setCount(msg.msg)
-      console.log("user count is"+msg.msg);
+      console.log("user count is" + msg.msg);
     })
 
     return () => {
@@ -82,13 +82,13 @@ export function GlobalProvider({ children }: ChildrenTypes) {
     socketRef.current.emit("sendChat", msg);
   };
 
-  const SendControl = (msg : ControlMessage)=>{
-    if(!socketRef.current) return;
+  const SendControl = (msg: ControlMessage) => {
+    if (!socketRef.current) return;
     socketRef.current.emit("sendCtrl", msg)
   }
 
   return (
-    <GlobalContext.Provider value={{ msgs, sendMessage, videoRef, SendControl, count,rec,setRec }}>
+    <GlobalContext.Provider value={{ msgs, sendMessage, videoRef, SendControl, count, rec, setRec }}>
       {children}
     </GlobalContext.Provider>
   );
