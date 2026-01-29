@@ -1,11 +1,27 @@
 import { useContext, useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { GlobalContext } from "@/ContextApi/Contexts";
-import { Play, Pause, RefreshCw, Maximize2, Minimize2, SkipBack, SkipForward, Volume2, VolumeX } from "lucide-react";
+import {
+  Play,
+  Pause,
+  RefreshCw,
+  Maximize2,
+  Minimize2,
+  SkipBack,
+  SkipForward,
+  Volume2,
+  VolumeX,
+  Upload,
+} from "lucide-react";
 import { ChatSheetTrigger } from "./ChatSheetTrigger";
 import type { ControlMessage } from "@/utils/types";
-import { motion} from "framer-motion";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { motion } from "framer-motion";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Slider } from "@/components/ui/slider";
 
 interface VideoPlayerProps {
@@ -14,8 +30,8 @@ interface VideoPlayerProps {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
-  const { videoRef, SendControl } = useContext(GlobalContext) as { 
-    videoRef: React.RefObject<HTMLVideoElement>,
+  const { videoRef, SendControl } = useContext(GlobalContext) as {
+    videoRef: React.RefObject<HTMLVideoElement>;
     SendControl: (msg: ControlMessage) => void;
   };
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -28,10 +44,11 @@ export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
   const [volume, setVolume] = useState(100);
   const videoContainerRef = useRef<HTMLDivElement>(null);
   const controlsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const toggleFullscreen = () => {
-    if (!videoContainerRef.current) return; 
-    
+    if (!videoContainerRef.current) return;
+
     if (!document.fullscreenElement) {
       videoContainerRef.current.requestFullscreen();
       setIsFullscreen(true);
@@ -43,7 +60,7 @@ export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
 
   const handlePlay = () => {
     const currCtrl: ControlMessage = {
-      type: "play"
+      type: "play",
     };
     SendControl(currCtrl);
     setIsPlaying(true);
@@ -51,7 +68,7 @@ export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
 
   const handlePause = () => {
     const currCtrl: ControlMessage = {
-      type: "pause"
+      type: "pause",
     };
     SendControl(currCtrl);
     setIsPlaying(false);
@@ -63,7 +80,7 @@ export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
       videoRef.current.currentTime = newTime;
       const currCtrl: ControlMessage = {
         type: "sync",
-        timeInSeconds: newTime
+        timeInSeconds: newTime,
       };
       SendControl(currCtrl);
       setCurrentTime(newTime);
@@ -76,7 +93,7 @@ export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
       videoRef.current.currentTime = newTime;
       const currCtrl: ControlMessage = {
         type: "sync",
-        timeInSeconds: newTime
+        timeInSeconds: newTime,
       };
       SendControl(currCtrl);
       setCurrentTime(newTime);
@@ -89,7 +106,7 @@ export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
       videoRef.current.currentTime = newTime;
       const currCtrl: ControlMessage = {
         type: "sync",
-        timeInSeconds: newTime
+        timeInSeconds: newTime,
       };
       SendControl(currCtrl);
       setCurrentTime(newTime);
@@ -100,7 +117,7 @@ export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
     if (videoRef.current) {
       const currCtrl: ControlMessage = {
         type: "sync",
-        timeInSeconds: videoRef.current.currentTime
+        timeInSeconds: videoRef.current.currentTime,
       };
       SendControl(currCtrl);
     }
@@ -111,7 +128,7 @@ export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
       const willBeMuted = !videoRef.current.muted;
       videoRef.current.muted = willBeMuted;
       setIsMuted(willBeMuted);
-      
+
       // Also set volume to 0 if muting, restore to previous volume if unmuting
       if (willBeMuted && volume > 0) {
         setVolume(0);
@@ -127,7 +144,7 @@ export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
       const newVolume = value[0] / 100;
       videoRef.current.volume = newVolume;
       setVolume(value[0]);
-      
+
       // Update mute state based on volume
       if (value[0] === 0) {
         videoRef.current.muted = true;
@@ -137,6 +154,25 @@ export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
         setIsMuted(false);
       }
     }
+  };
+
+  const handleVideoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && videoRef.current) {
+      const videoUrl = URL.createObjectURL(file);
+      videoRef.current.src = videoUrl;
+
+      // Optionally send control message to sync video change with other users
+      const currCtrl: ControlMessage = {
+        type: "videoChange",
+        videoUrl: videoUrl,
+      };
+      SendControl(currCtrl);
+    }
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
   };
 
   const resetControlsTimer = () => {
@@ -173,8 +209,8 @@ export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
       }
     };
 
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+
     if (videoRef.current) {
       videoRef.current.onplay = () => setIsPlaying(true);
       videoRef.current.onpause = () => setIsPlaying(false);
@@ -189,7 +225,7 @@ export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
     }
 
     return () => {
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
       if (controlsTimeoutRef.current) {
         clearTimeout(controlsTimeoutRef.current);
       }
@@ -199,11 +235,11 @@ export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
   };
 
   return (
-    <motion.div 
+    <motion.div
       ref={videoContainerRef}
       initial={{ scale: 0.95, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
@@ -212,19 +248,26 @@ export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
       onTouchStart={resetControlsTimer}
       className="relative w-full h-[85vh] max-h-[600px] flex flex-col bg-card border rounded-2xl overflow-hidden group"
     >
+      {/* Hidden file input for video upload */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleVideoUpload}
+        accept="video/*"
+        className="hidden"
+      />
+
       {/* Video area */}
       <div className="flex-1 relative overflow-hidden">
-        <video 
+        <video
           ref={videoRef}
           className="w-full h-full object-contain bg-black"
           src="https://www.w3schools.com/html/mov_bbb.mp4"
         />
-        
-        {/* Fullscreen floating controls - Removed as requested */}
       </div>
 
       {/* Bottom controls bar */}
-      <motion.div 
+      <motion.div
         initial={{ y: 10, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.2 }}
@@ -234,7 +277,7 @@ export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button 
+                <Button
                   onClick={handleSkipBackward}
                   size="icon"
                   variant="ghost"
@@ -243,16 +286,14 @@ export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
                   <SkipBack className="h-5 w-5" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>
-                -10 seconds
-              </TooltipContent>
+              <TooltipContent>-10 seconds</TooltipContent>
             </Tooltip>
           </TooltipProvider>
 
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button 
+                <Button
                   onClick={isPlaying ? handlePause : handlePlay}
                   size="icon"
                   variant="ghost"
@@ -265,16 +306,14 @@ export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
                   )}
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>
-                {isPlaying ? "Pause" : "Play"}
-              </TooltipContent>
+              <TooltipContent>{isPlaying ? "Pause" : "Play"}</TooltipContent>
             </Tooltip>
           </TooltipProvider>
 
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button 
+                <Button
                   onClick={handleSkipForward}
                   size="icon"
                   variant="ghost"
@@ -283,16 +322,14 @@ export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
                   <SkipForward className="h-5 w-5" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>
-                +10 seconds
-              </TooltipContent>
+              <TooltipContent>+10 seconds</TooltipContent>
             </Tooltip>
           </TooltipProvider>
 
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button 
+                <Button
                   onClick={handleSync}
                   size="icon"
                   variant="ghost"
@@ -301,13 +338,11 @@ export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
                   <RefreshCw className="h-5 w-5" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>
-                Sync
-              </TooltipContent>
+              <TooltipContent>Sync</TooltipContent>
             </Tooltip>
           </TooltipProvider>
         </div>
-        
+
         {/* Video timeline/progress bar */}
         <div className="flex-1 max-w-xl mx-4">
           <div className="flex items-center gap-2">
@@ -326,14 +361,31 @@ export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
             </span>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-2">
+          {/* Video Upload Button - Added here */}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  onClick={triggerFileInput}
+                  size="icon"
+                  variant="ghost"
+                  className="h-10 w-10"
+                >
+                  <Upload className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Upload video</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
           {/* Volume Controls */}
           <div className="flex items-center gap-2">
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button 
+                  <Button
                     onClick={toggleMute}
                     size="icon"
                     variant="ghost"
@@ -346,12 +398,10 @@ export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
                     )}
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>
-                  {isMuted ? "Unmute" : "Mute"}
-                </TooltipContent>
+                <TooltipContent>{isMuted ? "Unmute" : "Mute"}</TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            
+
             <div className="w-24">
               <Slider
                 value={[volume]}
@@ -362,7 +412,7 @@ export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
               />
             </div>
           </div>
-          
+
           {/* Fixed ChatSheetTrigger with proper Tooltip styling */}
           <TooltipProvider>
             <Tooltip>
@@ -371,16 +421,14 @@ export function VideoPlayer({ isChatOpen }: VideoPlayerProps) {
                   <ChatSheetTrigger />
                 </div>
               </TooltipTrigger>
-              <TooltipContent>
-                Open chat
-              </TooltipContent>
+              <TooltipContent>Open chat</TooltipContent>
             </Tooltip>
           </TooltipProvider>
-          
+
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button 
+                <Button
                   onClick={toggleFullscreen}
                   size="icon"
                   variant="ghost"
