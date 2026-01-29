@@ -80,7 +80,7 @@ export function ChatSheet({ onClose }: ChatSheetProps) {
   };
 
   return (
-    <SheetContent side="right" className="w-full sm:w-[400px] p-0 border-l">
+    <SheetContent side="right" className="w-full  sm:w-[400px] p-0 border-l">
       <SheetHeader className="p-6 border-b bg-gradient-to-r from-primary/5 to-pink-500/5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
