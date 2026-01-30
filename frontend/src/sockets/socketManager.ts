@@ -5,8 +5,10 @@ export class SocketManager {
   private static instance: SocketManager;
   private socket: Socket;
 
+  
   private constructor() {
-    this.socket = io("http://localhost:5000", {
+    const ip = "https://co-watch-p60v.onrender.com";
+    this.socket = io(ip, {
       autoConnect: false,
       transports: ["websocket"],
     });
@@ -30,7 +32,6 @@ export class SocketManager {
       this.socket.on("connect", () => {
         toast.success("Socket connected");
       });
-
 
       this.socket.on("connect_error", (err) => {
         toast.error("Socket connection failed");
